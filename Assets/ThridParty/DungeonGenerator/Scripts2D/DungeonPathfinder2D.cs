@@ -86,8 +86,8 @@ public class DungeonPathfinder2D {
         _queue.Clear();
         _closed.Clear();
 
-        _queue = new SimplePriorityQueue<Node, float>();
-        _closed = new HashSet<Node>();
+        //_queue = new SimplePriorityQueue<Node, float>();
+        //_closed = new HashSet<Node>();
 
         _grid[start].Cost = 0;
         _queue.Enqueue(_grid[start], 0);
@@ -127,11 +127,7 @@ public class DungeonPathfinder2D {
                     neighbor.Previous = node;
                     neighbor.Cost = newCost;
 
-                    if (_queue.TryGetPriority(node, out float existingPriority)) 
-                    {
-                        _queue.UpdatePriority(node, newCost);
-                    } 
-                    else 
+                    if (!_queue.TryUpdatePriority(node, newCost))
                     {
                         _queue.Enqueue(neighbor, neighbor.Cost);
                     }

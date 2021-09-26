@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = System.Random;
 using Graphs;
 using System.Threading.Tasks;
+using System.Threading;
 
 public class Generator2D : MonoBehaviour {
     enum CellType {
@@ -33,7 +35,7 @@ public class Generator2D : MonoBehaviour {
     [SerializeField]
     int roomCount;
     [SerializeField]
-    Vector2Int roomMaxSize;
+    RectInt roomMaxSize;
     [SerializeField]
     GameObject cubePrefab;
     [SerializeField]
@@ -54,7 +56,9 @@ public class Generator2D : MonoBehaviour {
 
     private void Generate() 
     {
+        var seed = (int)DateTime.Now.Ticks;
         _random = new Random(0);
+        //_random = new Random(seed);
         _grid = new Grid2D<CellType>(size, Vector2Int.zero);
         _rooms = new List<Room>();
 
@@ -66,7 +70,9 @@ public class Generator2D : MonoBehaviour {
 
     private void PlaceRooms() 
     {
-        for (int i = 0; i < roomCount; i++) 
+        var maxRoomCount = roomCount;
+        var maxRetry = maxRoomCount * 10;
+        while ((maxRoomCount > 0 || _rooms.Count < 2) && maxRetry > 0)
         {
             Vector2Int location = new Vector2Int(
                 _random.Next(0, size.x),
@@ -74,39 +80,41 @@ public class Generator2D : MonoBehaviour {
             );
 
             Vector2Int roomSize = new Vector2Int(
-                _random.Next(1, roomMaxSize.x + 1),
-                _random.Next(1, roomMaxSize.y + 1)
+                _random.Next(roomMaxSize.x, roomMaxSize.width + 1),
+                _random.Next(roomMaxSize.y, roomMaxSize.height + 1)
             );
 
             bool add = true;
             Room newRoom = new Room(location, roomSize);
             Room buffer = new Room(location + new Vector2Int(-1, -1), roomSize + new Vector2Int(2, 2));
 
-            foreach (var room in _rooms) 
+            foreach (var room in _rooms)
             {
-                if (Room.Intersect(room, buffer)) 
+                if (Room.Intersect(room, buffer))
                 {
                     add = false;
                     break;
                 }
             }
 
-            if (newRoom.bounds.xMin < 0 || newRoom.bounds.xMax >= size.x || 
-                newRoom.bounds.yMin < 0 || newRoom.bounds.yMax >= size.y) 
+            if (newRoom.bounds.xMin < 0 || newRoom.bounds.xMax >= size.x ||
+                newRoom.bounds.yMin < 0 || newRoom.bounds.yMax >= size.y)
             {
                 add = false;
             }
 
-            if (add) 
+            if (add)
             {
                 _rooms.Add(newRoom);
                 PlaceRoom(newRoom.bounds.position, newRoom.bounds.size);
 
-                foreach (var pos in newRoom.bounds.allPositionsWithin) 
+                foreach (var pos in newRoom.bounds.allPositionsWithin)
                 {
                     _grid[pos] = CellType.Room;
                 }
+                maxRoomCount--;
             }
+            maxRetry--;
         }
     }
 

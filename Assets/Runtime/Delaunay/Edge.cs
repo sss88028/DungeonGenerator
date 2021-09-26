@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Display;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Structure
 			get;
 			set; 
 		}
+
 		public Vertex V 
 		{ 
 			get; 
@@ -23,7 +25,6 @@ namespace Structure
 		#region public-method
 		public Edge()
 		{
-
 		}
 
 		public Edge(Vertex u, Vertex v)
@@ -67,6 +68,17 @@ namespace Structure
 		public override int GetHashCode()
 		{
 			return U.GetHashCode() ^ V.GetHashCode();
+		}
+
+		public static bool AlmostEqual(Edge left, Edge right)
+		{
+			return Vertex.AlmostEqual(left.U, right.U) && Vertex.AlmostEqual(left.V, right.V)
+				|| Vertex.AlmostEqual(left.U, right.V) && Vertex.AlmostEqual(left.V, right.U);
+		}
+
+		public static bool HasVertex(Edge e, Vertex v)
+		{
+			return e.U.Equals(v) || e.V.Equals(v);
 		}
 		#endregion public-method
 	}
